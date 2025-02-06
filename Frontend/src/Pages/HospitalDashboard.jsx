@@ -1,63 +1,110 @@
 import React from 'react';
 import UseFetchMeHospital from '../hooks/UseFechMeHospital';
 import UseFetchBloodRequest from '../hooks/UseFechBloodRequest';
-import UseFetchAllScheduledBlood from '../hooks/UseFechScheduledBlood';
+import { GiBlood, GiHeartBeats } from 'react-icons/gi';
+import { motion } from 'framer-motion';
 
 export default function HospitalDashboard() {
- 
- 
-const {data}=UseFetchMeHospital()
-const {data:blood}=UseFetchBloodRequest()
-// const {data:schedule}=UseFetchAllScheduledBlood()
-// const totalexpecteddonation=schedule?.data.filter((item)=>item.Iscollected===false).length
-const totalpending=blood?.data.filter((item)=>item.IsApproved==="Pending").length
+  const { data } = UseFetchMeHospital();
+  const { data: blood } = UseFetchBloodRequest();
   
-const totalAvailableUnits=data?.data[0]?.AvailableBlood?.reduce((acc, item) => acc + item.units, 0)
+  const totalpending = blood?.data.filter((item) => item.IsApproved === "Pending").length;
+  const totalAvailableUnits = data?.data?.AvailableBlood?.reduce((acc, item) => acc + item.units, 0);
+
+  // Blood type color mapping
+  const bloodTypeColors = {
+    'A+': 'from-red-600 to-red-400',
+    'B+': 'from-blue-600 to-blue-400',
+    'AB+': 'from-purple-600 to-purple-400',
+    'O+': 'from-green-600 to-green-400',
+    'A-': 'from-red-800 to-red-600',
+    'B-': 'from-blue-800 to-blue-600',
+    'AB-': 'from-purple-800 to-purple-600',
+    'O-': 'from-green-800 to-green-600',
+  };
 
   return (
-    <div className="w-[90%] mx-auto flex flex-col gap-8">
-      {/* Header Section */}
-      <div className="w-full h-[250px] flex flex-col justify-center items-center rounded-lg bg-gradient-to-r from-red-700 to-zinc-500 shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-40 h-40 bg-yellow-500 opacity-20 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-0 right-0 w-40 h-40 bg-yellow-300 opacity-20 rounded-full blur-2xl"></div>
-        <p className="text-white text-[40px] font-extrabold text-center drop-shadow-md">
-          👋 Welcome to the Hospital Dashboard
+    <div className="w-[90%] mx-auto flex flex-col gap-8 py-8">
+      {/* Hero Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full h-64 flex flex-col justify-center items-center rounded-2xl bg-gradient-to-r from-red-600 to-red-500 shadow-xl relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent" />
+        <GiHeartBeats className="text-white/10 text-9xl absolute right-8 -top-8" />
+        <h1 className="text-white text-4xl font-bold text-center mb-2 drop-shadow-lg z-10">
+          Welcome to BloodCare Hub
+        </h1>
+        <p className="text-white/90 text-lg text-center z-10">
+          Managing Life-Saving Resources
         </p>
-        <p className="text-white text-[22px] text-center mt-2 drop-shadow-sm">
-          Ensuring Every Drop Saves Lives
-        </p>
+      </motion.div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div 
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-white to-red-50 p-6 rounded-2xl shadow-lg flex items-center gap-6"
+        >
+          <div className="bg-red-100 p-4 rounded-xl">
+            <GiBlood className="text-red-600 text-4xl" />
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-red-600">{totalAvailableUnits}</p>
+            <p className="text-gray-600 mt-1">Total Blood Units</p>
+            <span className="text-sm text-red-500">Available in Stock</span>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-white to-blue-50 p-6 rounded-2xl shadow-lg flex items-center gap-6"
+        >
+          <div className="bg-blue-100 p-4 rounded-xl">
+          
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-blue-600">{totalpending}</p>
+            <p className="text-gray-600 mt-1">Pending Requests</p>
+            <span className="text-sm text-blue-500">Awaiting Approval</span>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Statistics Section */}
-      <div className="flex flex-wrap justify-between items-stretch gap-6">
-        <div className="flex flex-col justify-center items-center bg-white shadow-md rounded-lg p-6 flex-1 min-w-[200px]">
-          <p className="text-red-600 text-4xl font-bold">{totalAvailableUnits}</p>
-          <p className="text-gray-600 text-lg">Total Units Collected</p>
-        </div>
-        <div className="flex flex-col justify-center items-center bg-white shadow-md rounded-lg p-6 flex-1 min-w-[200px]">
-          <p className="text-green-600 text-4xl font-bold">{totalpending}</p>
-          <p className="text-gray-600 text-lg">Total Pending  Blood Requests to Erc</p>
-        </div>
-        {/*  */}
-      </div>
-
-      {/* Blood Stock Levels */}
-      <div className="bg-white shadow-md rounded-lg p-6 flex flex-col gap-6">
-        <h2 className="text-2xl font-bold text-gray-800">Blood Stock Levels</h2>
-        <div className="flex flex-wrap gap-6">
-          {data?.data[0]?.AvailableBlood?.map((stock) => (
-            <div
-              key={stock.bloodType}
-              className="flex flex-col justify-center items-center bg-gray-100 shadow-sm rounded-lg p-4 flex-1 min-w-[150px]"
+      {/* Blood Inventory */}
+      <div className="bg-gradient-to-br from-white to-red-50 rounded-2xl shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+          <GiBlood className="text-red-600" />
+          Blood Inventory
+        </h2>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {data?.data?.AvailableBlood?.map((stock) => (
+            <motion.div 
+              key={stock.bloodGroup}
+              whileHover={{ scale: 1.05 }}
+              className={`p-4 rounded-xl shadow-md ${bloodTypeColors[stock.bloodGroup]} bg-gradient-to-br text-white`}
             >
-              <p className="text-xl font-bold text-red-700">{stock.bloodGroup}</p>
-              <p className="text-lg font-medium text-gray-600">{stock.units} Units</p>
-            </div>
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold">{stock.bloodGroup}</span>
+                <span className="text-lg">{stock.units} Units</span>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
-  
+      {/* Recent Activity (You can add this section later) */}
+      {/* <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg p-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+          <GiHeartBeats className="text-blue-600" />
+          Recent Activity
+        </h2>
+        <div className="text-gray-500 text-center py-8">
+          <p>Activity feed coming soon...</p>
+        </div>
+      </div> */}
     </div>
   );
 }

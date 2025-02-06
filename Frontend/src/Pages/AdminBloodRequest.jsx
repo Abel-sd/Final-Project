@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { useMutation } from "@tanstack/react-query";
 import UseFetchAllBloodRequest from "../hooks/UseFechAllBloodRequest";
@@ -9,29 +9,31 @@ import Alert from "@mui/material/Alert";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function AdminBloodRequest() {
-  const [rows, setRows] = useState([]);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "" });
-
-  const { data, isFetching } = UseFetchAllBloodRequest();
-
-  useEffect(() => {
-    if (data) {
-      setRows(
-        data?.data?.map((item) => ({
-          id: item?._id,
-          bloodType: item.bloodGroup,
-          units: item.units,
-          requestDate: new Date(item.date).toLocaleDateString(), // Format date
-          status: item.IsApproved,
-        }))
-      );
-    }
-  }, [data, isFetching]);
-
-  const api = useAxiosInstance();
   const queryClient = useQueryClient();
-  const mutation = useMutation({
-    mutationKey: ["bloodrequest"],
+  const api = useAxiosInstance();
+  const [snackbar, setSnackbar] = React.useState({ 
+    open: false, 
+    message: "", 
+    severity: "info" 
+  });
+
+  // Fetch blood requests
+  const { data, isFetching, isError, error } = UseFetchAllBloodRequest();
+
+  // Memoized row data
+  const rows = useMemo(() => 
+    data?.data?.map(item => ({
+      id: item?._id,
+      bloodType: item.bloodGroup,
+      units: item.units,
+      requestDate: new Date(item.date).toLocaleDateString(),
+      status: item.IsApproved,
+    })) || [],
+    [data]
+  );
+
+  // Status update mutation/updateIsPatientgiven/:id
+  const { mutate, isPending } = useMutation({
     mutationFn: async ({ id, status }) => {
       const response = await api.put(`/bloodRequest/manage/updateApproval/${id}`, {
         IsApproved: status,
@@ -39,60 +41,45 @@ export default function AdminBloodRequest() {
       return response.data;
     },
     onSuccess: () => {
-      setSnackbar({
-        open: true,
-        message: "Status Updated Successfully!",
-        severity: "success",
-      });
+      showSnackbar("Status updated successfully!", "success");
       queryClient.invalidateQueries("fechAllBloodRequest");
     },
     onError: (error) => {
-     
-      setSnackbar({
-        open: true,
-        message: error?.response?.data?.error || "Error Updating Status!",
-        severity: "error",
-      });
+      showSnackbar(
+        error?.response?.data?.error || "Failed to update status. Please try again.",
+        "error"
+      );
     },
   });
 
-  const handleChangeStatus = (id, value, currentStatus) => {
-
-    if (value === "Pending") {
-      setSnackbar({
-        open: true,
-        message: "You cannot set the status to pending!",
-        severity: "error",
-      });
-      return;
-    }
-    // Prevent rejecting an already approved request
-    if (currentStatus === "Approved" && value === "Rejected") {
-      setSnackbar({
-        open: true,
-        message: "You cannot reject an approved request!",
-        severity: "error",
-      });
-      return;
-    }
-
-    // Prevent approving a rejected request
-    if (currentStatus === "Rejected" && value === "Approved") {
-      setSnackbar({
-        open: true,
-        message: "You cannot approve a rejected request!",
-        severity: "error",
-      });
-      return;
-    }
-
-    mutation.mutate({ id, status: value });
-
-  
+  const showSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
   };
 
   const handleCloseSnackbar = () => {
-    setSnackbar({ open: false, message: "", severity: "" });
+    setSnackbar(prev => ({ ...prev, open: false }));
+  };
+
+  const handleChangeStatus = (id, value, currentStatus) => {
+    const validationRules = {
+    
+      Approved: (newStatus) => 
+        currentStatus === "Approved" && newStatus === "Rejected" 
+          ? "Cannot reject approved request!" 
+          : null,
+      Rejected: (newStatus) => 
+        currentStatus === "Rejected" && newStatus === "Approved" 
+          ? "Cannot approve rejected request!" 
+          : null,
+    };
+
+    const errorMessage = validationRules[value]?.(value) || validationRules[currentStatus]?.(value);
+    if (errorMessage) {
+      showSnackbar(errorMessage, "error");
+      return;
+    }
+
+    mutate({ id, status: value });
   };
 
   const columns = [
@@ -103,50 +90,82 @@ export default function AdminBloodRequest() {
     {
       field: "status",
       headerName: "Status",
-      width: 150,
+      width: 180,
       renderCell: (params) => (
         <select
           value={params.value}
           onChange={(e) => handleChangeStatus(params.row.id, e.target.value, params.value)}
-          style={{ padding: "6px", borderRadius: "4px", border: "1px solid #ccc" }}
+          disabled={isPending}
+          className={`px-3 py-1 rounded-md border ${
+            isPending ? 'bg-gray-100 cursor-not-allowed' : 
+            params.value === 'Approved' ? 'border-green-500 bg-green-50' :
+            params.value === 'Rejected' ? 'border-red-500 bg-red-50' :
+            'border-yellow-500 bg-yellow-50'
+          } focus:ring-2 focus:outline-none`}
         >
-          <option value="Pending">Pending</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
+          <option value="Pending" className="bg-yellow-50">Pending</option>
+          <option value="Approved" className="bg-green-50">Approved</option>
+          <option value="Rejected" className="bg-red-50">Rejected</option>
         </select>
       ),
     },
   ];
 
-  if (isFetching) {
-    return <LoadingPage />;
-  }
+  if (isFetching) return <LoadingPage />;
+
+  if (isError) return (
+    <div className="w-[90%] mx-auto p-6 bg-gradient-to-r from-red-100 to-pink-100 rounded-xl shadow-lg">
+      <p className="text-red-600 text-center text-xl font-semibold">
+        Error loading requests: {error?.message || "Please try again later"}
+      </p>
+    </div>
+  );
 
   return (
-    <div className="w-[90%] mx-auto flex flex-col gap-6">
-      <div style={{ height: 400, width: "100%" }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={5}
-          rowsPerPageOptions={[5]}
-        />
-      </div>
+    <div className="w-[90%] mx-auto flex flex-col gap-8 py-8">
+      <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl p-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+          Blood Request Management
+        </h1>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
+        <div className="bg-white rounded-lg shadow-inner" style={{ height: 500 }}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pageSize={5}
+            rowsPerPageOptions={[5]}
+            loading={isPending}
+            sx={{
+              border: 'none',
+              '& .MuiDataGrid-cell:hover': { color: 'primary.main' },
+              '& .MuiDataGrid-columnHeaders': {
+                backgroundColor: '#f8fafc',
+                fontSize: '1rem'
+              }
+            }}
+            getRowClassName={(params) => 
+              `status-${params.row.status.toLowerCase()} 
+              ${isPending ? 'opacity-50' : ''}`
+            }
+          />
+        </div>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={5000}
           onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          variant="filled"
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            variant="filled"
+            sx={{ width: '100%', fontWeight: 500 }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </div>
     </div>
   );
 }

@@ -17,6 +17,9 @@ import LoginPage from "./Pages/LoginPage";
 import RegisterPage from "./Pages/Registerpage";
 import PrivateRoute from "./Components/PrivateRoute";
 import UnauthorizedPage from "./Pages/UnAuthorizedPage";
+import VerificationPage from "./Pages/VerificationPage";
+import RequestForgetpassword from "./Pages/RequestForgetpassword";
+import ResetWithToken from "./Pages/ResetWithtoken";
 
 function App() {
   return (
@@ -27,6 +30,10 @@ function App() {
 <Routes>
 <Route path="/login" element={<LoginPage/>} />
 <Route path="/register" element={<RegisterPage/>} />
+<Route path="/verify" element={<VerificationPage/>}/>
+<Route path="/resetpassword" element={<ResetWithToken/>} />
+<Route path="/forgetpassword" element={<RequestForgetpassword/>} />
+
 
 <Route element={<PrivateRoute allowedRoles={["Doner"]} />} >
 <Route path="/" element={<HeaderCombine element={<DonerDashboard />}/>} />
@@ -45,6 +52,7 @@ function App() {
   <Route path="/admin-doner" element={<HeaderCombine element={<AdminDoner/>} />}/>
   <Route path="/admin-schedules" element={<HeaderCombine element={<SchedulesPage/>} />}/>
   <Route path="/admin-bloodRequest" element={<HeaderCombine element={<AdminBloodRequest/>} />}/>
+
 
 </Route>
 <Route path="/unauthorized" element={<UnauthorizedPage/>} />

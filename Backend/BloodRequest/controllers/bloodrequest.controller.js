@@ -136,21 +136,63 @@ module.exports.updateBloodRequestApproval = async (req, res) => {
 
 
 module.exports.updateBloodRequestGivenToPatient = async (req, res) => {
-    const { error } = validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    const bloodRequest = await BloodRequest.findByIdAndUpdate(req.params.id, {
-        IsGivenToPatient: req.body.IsGivenToPatient
-    }, { new: true });
-   
-    
+  try {
+    // Validate request body
+  
+    // Find and update blood request
+    const bloodRequest = await BloodRequest.findByIdAndUpdate(
+      req.params.id,
+      { IsGivenToPatient: true },
+      { new: true, session }
+    );
+    if (!bloodRequest) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).send("BloodRequest not found");
+    }
 
-    if (!bloodRequest) return res.status(404).send("BloodRequest not found");
-    await Hospital.findByIdAndUpdate(bloodRequest.hospital, {
-        $inc: { units: -bloodRequest.units }
-    }, { new: true });
+    // Find hospital
+    const hospital = await Hospital.findById(bloodRequest.hospital).session(session);
+    if (!hospital) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).send("Hospital not found");
+    }
+
+    // Update available blood units
+    let bloodUpdated = false;
+    hospital.AvailableBlood.forEach((blood) => {
+      if (blood.bloodGroup === bloodRequest.bloodGroup) {
+        if (blood.units < bloodRequest.units) {
+          throw new Error("Not enough blood units available");
+        }
+        blood.units -= bloodRequest.units;
+        bloodUpdated = true;
+      }
+    });
+
+    if (!bloodUpdated) {
+      throw new Error("Blood group not found in hospital inventory");
+    }
+
+    // Save hospital update
+    await hospital.save({ session });
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
     res.send(bloodRequest);
-}
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error updating blood request:", error);
+    res.status(500).send(error.message || "An error occurred while processing the request.");
+  }
+};
 module.exports.deleteBloodRequest = async (req, res) => {
 
     const bloodRequest = await BloodRequest.findById(req.body.id);

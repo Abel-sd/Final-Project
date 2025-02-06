@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const joi = require('joi');
+const { resetpassword } = require('../users/controllers/auth.controller');
 const Schema = mongoose.Schema;
 
 
@@ -19,7 +20,17 @@ const AuthSchema = new Schema({
         type: String,
         enum: ['Admin', 'Doner','Hospital'],
         default: 'Doner'
-    }
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    resetpasswordToken: {
+        type: String
+    },
+    verificationToken: {
+        type: String
+    },
     });
 const joischema = joi.object({
     email: joi.string().email().required(),

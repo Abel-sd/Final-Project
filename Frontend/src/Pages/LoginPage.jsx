@@ -108,11 +108,12 @@ const redirect=[
             </button>
           </div>
           <Link to="/register" className="text-center block mt-4 text-blue-600">Don't have an account? Register</Link>
+          <Link to="/forgetpassword" className="text-center block mt-4 text-blue-600">Forget password? reset here</Link>
         </form>
 
         {isError && (
           <p className="text-red-600 text-sm mt-4">
-            {mutationError?.message || 'An error occurred during login.'}
+            {mutationError?.response?.data|| 'An error occurred during login.'}
           </p>
         )}
       </div>

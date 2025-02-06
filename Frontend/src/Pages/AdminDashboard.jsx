@@ -47,103 +47,127 @@ mutate()
   };
 
   return (
-    <div className="w-[90%] mx-auto flex flex-col gap-8">
-      {/* Overview Cards Section */}
-      <div className="flex flex-wrap justify-between gap-6">
-        <div className="flex flex-col justify-center items-center bg-white shadow-md rounded-lg p-6 flex-1 min-w-[200px]">
-          <p className="text-red-600 text-4xl font-bold">{recentDonors?.length}</p>
-          <p className="text-gray-600 text-lg">Total Donations</p>
+    <div className="w-[90%] mx-auto flex flex-col gap-8 py-8">
+    {/* Overview Cards Section */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[
+        { 
+          title: 'Total Donations',
+          value: recentDonors?.length,
+          gradient: 'from-pink-100 to-red-100',
+          text: 'text-red-600'
+        },
+        { 
+          title: 'Total Blood Stock',
+          value: bloodInventory?.data?.totalUnits,
+          gradient: 'from-green-100 to-emerald-100',
+          text: 'text-green-600'
+        },
+        { 
+          title: 'Registered Donors / Hospitals',
+          value: `${Donors?.data?.length} / ${hospital?.data?.length}`,
+          gradient: 'from-blue-100 to-cyan-100',
+          text: 'text-blue-600'
+        },
+      ].map((card, index) => (
+        <div 
+          key={index}
+          className={`bg-gradient-to-r ${card.gradient} shadow-lg rounded-xl p-6 transform transition-all hover:shadow-xl hover:-translate-y-1`}
+        >
+          <p className={`${card.text} text-4xl font-bold mb-2`}>{card.value}</p>
+          <p className="text-gray-600 text-lg font-medium">{card.title}</p>
         </div>
+      ))}
+    </div>
 
-        <div className="flex flex-col justify-center items-center bg-white shadow-md rounded-lg p-6 flex-1 min-w-[200px]">
-          <p className="text-green-600 text-4xl font-bold">{bloodInventory?.data?.totalUnits}</p>
-          <p className="text-gray-600 text-lg">Total Blood Stock</p>
-        </div>
+    {/* Low Stock Alert */}
+    {lowStockAlert && (
+      <div className="bg-gradient-to-r from-yellow-300 to-orange-300 p-4 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-black text-lg font-bold text-center md:text-left">
+          ⚠️ Low Stock Alert: {lowStockBloodGroups.join(', ')} below {lowStockThreshold} units
+        </p>
+        <button
+          className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          onClick={handleAlertClick}
+          disabled={isPending}
+        >
+          {isPending ? 'Sending...' : 'Alert Hospitals'}
+        </button>
+      </div>
+    )}
 
-        <div className="flex flex-col justify-center items-center bg-white shadow-md rounded-lg p-6 flex-1 min-w-[200px]">
-          <p className="text-blue-600 text-4xl font-bold">
-            {Donors?.data?.length} / {hospital?.data?.length}
-          </p>
-          <p className="text-gray-600 text-lg">Registered Donors / Hospitals</p>
-        </div>
-        
+    {/* Charts Section */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl shadow-xl">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Blood Stock Distribution</h3>
+        <BloodStockChart hospitals={hospital?.data || []} />
       </div>
       
-      {/* Alert for low blood stock */}
-      {lowStockAlert && (
-        <div className="bg-yellow-300 p-4 rounded-lg shadow-md flex justify-between items-center">
-          <p className="text-black text-lg font-bold">
-            Low Blood Stock Alert! The following blood groups are below the minimum threshold: {lowStockBloodGroups.join(', ')}.
-          </p>
-          <button
-            className="bg-red-600 text-white px-4 py-2 rounded-lg"
-            onClick={handleAlertClick}
-          >
-            Alert Now
-          </button>
-        </div>
-      )}
-
-      <div className="flex flex-wrap justify-between gap-6">
-        {/* Blood Stock Chart */}
-        <div className=" flex items-center justify-center">
-          <BloodStockChart hospitals={hospital?.data || []} />
-        </div>
-
-        {/* Pie Chart */}
-        <div className="flex items-center justify-center">
-          <PieChart data={bloodStockData} />
-        </div>
-      </div>
-
-      {/* Total Expected Donation Card */}
-      <div className="flex flex-col justify-center items-center bg-white shadow-md rounded-lg p-6 flex-1 min-w-[200px]">
-        <p className="text-yellow-500 text-4xl font-bold">{totalexpecteddonation}</p>
-        <p className="text-gray-600 text-lg">Total Expected Donation</p>
-      </div>
-
-      {/* Total Blood Stock Breakdown */}
-      <div className="bg-white shadow-md rounded-lg p-6 flex flex-col gap-6">
-        <h2 className="text-2xl font-bold text-gray-800">Total Blood Stock Breakdown</h2>
-        <div className="flex flex-wrap gap-6">
-          {bloodInventory?.data?.inventory.map((stock) => (
-            <div
-              key={stock.bloodType}
-              className="flex flex-col justify-center items-center bg-gray-100 shadow-sm rounded-lg p-4 flex-1 min-w-[150px]"
-            >
-              <p className="text-xl font-bold text-red-700">{stock.bloodGroup}</p>
-              <p className="text-lg font-medium text-gray-600">{stock.units} Units</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent Donor Information */}
-      <div className="bg-white shadow-md rounded-lg p-6 flex flex-col gap-6">
-        <h2 className="text-2xl font-bold text-gray-800">Recent Donor Information</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border border-gray-300 px-4 py-2">Donor Name</th>
-                <th className="border border-gray-300 px-4 py-2">Donation Date</th>
-                <th className="border border-gray-300 px-4 py-2">Blood Type</th>
-                <th className="border border-gray-300 px-4 py-2">Units Donated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentDonors?.map((donor, index) => (
-                <tr key={index} className="hover:bg-gray-100">
-                  <td className="border border-gray-300 px-4 py-2">{donor?.donor?.name}</td>
-                  <td className="border border-gray-300 px-4 py-2">{donor?.date}</td>
-                  <td className="border border-gray-300 px-4 py-2">{donor?.donor?.bloodGroup}</td>
-                  <td className="border border-gray-300 px-4 py-2">{donor?.VolumeCollected}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl shadow-xl">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Blood Group Proportions</h3>
+        <PieChart data={bloodStockData} />
       </div>
     </div>
+
+    {/* Total Expected Donation */}
+    <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-lg rounded-xl p-6 transform transition-all hover:shadow-xl">
+      <p className="text-white text-4xl font-bold">{totalexpecteddonation}</p>
+      <p className="text-yellow-100 text-lg font-medium">Total Expected Donations</p>
+    </div>
+
+    {/* Blood Stock Breakdown */}
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-6">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Blood Stock Breakdown</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {bloodInventory?.data?.inventory.map((stock) => (
+          <div
+            key={stock.bloodGroup}
+            className="bg-gradient-to-br from-red-50 to-pink-50 p-4 rounded-xl shadow-md hover:shadow-lg transition-all"
+          >
+            <p className="text-2xl font-bold text-red-700 mb-1">{stock.bloodGroup}</p>
+            <p className="text-lg text-gray-600">{stock.units} Units</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Recent Donors Table */}
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl overflow-hidden">
+      <h2 className="text-2xl font-bold text-gray-800 p-6">Recent Donations</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gradient-to-r from-gray-100 to-gray-200">
+            <tr>
+              {['Donor Name', 'Donation Date', 'Blood Type', 'Units Donated'].map((header, index) => (
+                <th 
+                  key={index}
+                  className="px-6 py-3 text-left text-sm font-semibold text-gray-700"
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {recentDonors?.map((donor, index) => (
+              <tr 
+                key={index}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                <td className="px-6 py-4 text-gray-800 font-medium">{donor?.donor?.name}</td>
+                <td className="px-6 py-4 text-gray-600">{new Date(donor?.date).toLocaleDateString()}</td>
+                <td className="px-6 py-4">
+                  <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">
+                    {donor?.donor?.bloodGroup}
+                  </span>
+                </td>
+                <td className="px-6 py-4 font-semibold text-gray-700">{donor?.VolumeCollected}ml</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
   );
 }

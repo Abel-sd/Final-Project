@@ -18,7 +18,7 @@ module.exports.createScheduleDonation = async (req, res) => {
     if (error) return res.status(400).send(error.details[0].message);
     const donor = await Donor.findOne({ Auth: req.user.id });
     if (!donor) return res.status(404).send("Donor not found");
-    const iffutureSchedule = await ScheduleDonation.findOne({ donor: donor._id, date: { $gte: new Date() } });
+    const iffutureSchedule = await ScheduleDonation.findOne({ donor: donor._id, date: { $gte: new Date() } ,Iscollected:false});
     if (iffutureSchedule) return res.status(400).send("You already have a future schedule donation");
     if (donor.lastDonationDate) {
         const lastDonationDate = new Date(donor.lastDonationDate);
@@ -33,6 +33,7 @@ module.exports.createScheduleDonation = async (req, res) => {
     const scheduleDonation = new ScheduleDonation({
         donor: donor._id,
         date: req.body.date,
+        location: req.body.location,
        
     });
     await scheduleDonation.save();
@@ -82,7 +83,9 @@ module.exports.completeScheduleDonation = async (req, res) => {
    return res.send(scheduleDonation);
 }
 module.exports.getmyTotalCompletedDonation = async (req, res) => {
-    const scheduleDonation = await ScheduleDonation.find({ donor: req.user.id, Iscollected: true });
+    console.log(req.user.id);
+    const donor=await Donor.findOne({Auth:req.user.id});
+    const scheduleDonation = await ScheduleDonation.find({ donor: donor._id, Iscollected: true });
     
     let total = 0;
     scheduleDonation.forEach(element => {

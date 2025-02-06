@@ -8,6 +8,7 @@ const hospitalcontroller = require("../../Hospitals/controllers/hospital.control
 router.post("/create", hospitalcontroller.createHospital);
 router.put("/update/:id", verifyJWTToken, hospitalcontroller.updateHospital);
 router.delete("/delete", verifyJWTToken, hospitalcontroller.deleteHospital);
+router.delete("/delete/:id", verifyJWTToken, hospitalcontroller.deleteIndividualHospital);
 router.get("/get-all", verifyJWTToken, hospitalcontroller.getHospital);
 router.get("/getMyHospital", verifyJWTToken,hospitalcontroller.getMyHospital);
 

@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import UseFetchMeHospital from '../hooks/UseFechMeHospital';
 
 export default function HospitalProfilePage() {
-  // Initialize state for hospital profile data
+ 
+   const { data: me } = UseFetchMeHospital();
   const [hospitalData, setHospitalData] = useState({
-    name: 'St. Mary\'s Hospital',
-    location: '123 Health St., Wellness City, HC 45678',
-    contact: '(123) 456-7890',
-    departments: 'Cardiology, Neurology, Pediatrics, Orthopedics', // Example as a comma-separated string
+    name: '',
+    location: '',
+    contact: '',
+    departments: '', 
   });
+  
+  useEffect(() => {
+    if (me) {
+      setHospitalData({
+        name: me?.data?.name,
+        location: me?.data?.address,
+        contact: me?.data?.phone,
+        departments: me?.data?.departments?.join(', '),
+      });
+    }
+  }, [me]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,12 +72,7 @@ export default function HospitalProfilePage() {
       </div>
 
 
-      {/* Submit Button */}
-      <div className="flex justify-end">
-        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          Save Changes
-        </button>
-      </div>
+     
     </div>
   );
 }

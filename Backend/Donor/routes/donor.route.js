@@ -10,6 +10,8 @@ router.put("/update", verifyJWTToken, donorController.updateDonor);
 router.delete("/delete", verifyJWTToken, donorController.deleteDonor);
 router.get("/get-all", verifyJWTToken, donorController.getDonor);
 router.get("/getMyDonor", verifyJWTToken,donorController.getMyDonor);
+router.post("/verify", donorController.verifyEmail);
+router.delete("/delete/:id", verifyJWTToken, donorController.deleteIndividualDonor);
 
 
 module.exports = router;

@@ -7,13 +7,14 @@ import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, CategoryScale, Li
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale, LinearScale);
 
 const PieChart = ({ data }) => {
+  console.log(data);
   const chartData = {
-    labels: ['Group A', 'Group B', 'Group AB', 'Group O'], // Replace with dynamic blood groups
+    labels: ['Group A+','Group A-', 'Group B+','Group B-', 'Group o+', 'Group o-','Group AB+','Group AB-'], // Replace with dynamic blood groups
     datasets: [
       {
         label: 'Blood Stock Breakdown',
         data: data, // This should be the blood stock data array
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733'], // Color for each section
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733','#efed44',"green",'orange','blue'], // Color for each section
         hoverOffset: 4,
       },
     ],

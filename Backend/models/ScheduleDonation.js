@@ -21,6 +21,10 @@ const ScheduleDonationSchema = new Schema({
     VolumeCollected: {
         type: Number,
         default: 0
+    },
+    location: {
+        type: String,
+        required: true
     }
 });
 
@@ -30,7 +34,8 @@ const joischema = joi.object({
     donor: joi.string(),
     date: joi.date().required(),
     Iscollected: joi.boolean(),
-    VolumeCollected: joi.number()
+    VolumeCollected: joi.number(),
+    location: joi.string()
 });
 
 const validate = (obj) => {

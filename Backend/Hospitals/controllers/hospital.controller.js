@@ -1,7 +1,7 @@
 const { Auth,validate:validateAuth } = require("../../models/Auth");
 const { Hospital,validate }  =require("../../models/Hospital");
 const { register } = require("../../users/controllers/auth.controller");
-
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
@@ -22,7 +22,8 @@ module.exports.createHospital = async (req, res) => {
     const user = await Auth.create({
         email: req.body.auth.email,
         password: req.body.auth.password,
-        role: "Hospital"
+        role: "Hospital",
+        isVerified: true,
     });
 
    
@@ -52,7 +53,7 @@ module.exports.getHospital = async (req, res) => {
     res.send(hospital);
 }
 module.exports.getMyHospital = async (req, res) => {
-    const hospital = await Hospital.find({ Auth: req.user.id });
+    const hospital = await Hospital.findOne({ Auth: req.user.id });
     res.send(hospital);
 }
 module.exports.updateHospital = async (req, res) => {
@@ -81,3 +82,33 @@ module.exports.deleteHospital = async (req, res) => {
     if (!hospital) return res.status(404).send("Hospital not found");
     res.send(hospital);
 }
+module.exports.deleteIndividualHospital = async (req, res) => {
+    const session = await mongoose.startSession(); // Start a transaction session
+    session.startTransaction();
+  
+    try {
+      const hospital = await Hospital.findById(req.params.id).session(session);
+      if (!hospital) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).send("Hospital not found");
+      }
+  
+      const auth = await Auth.findById(hospital.Auth).session(session);
+      if (auth) {
+        await auth.deleteOne({ session });
+      }
+  
+      await hospital.deleteOne({ session });
+  
+      await session.commitTransaction(); // Commit if everything succeeds
+      session.endSession();
+  
+      res.send("Hospital deleted successfully");
+    } catch (error) {
+      await session.abortTransaction(); // Rollback if something fails
+      session.endSession();
+      console.error("Error deleting hospital:", error);
+      res.status(500).send("An error occurred while deleting the hospital.");
+    }
+  };

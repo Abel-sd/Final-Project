@@ -124,6 +124,7 @@ export default function SchedulesPage() {
             onClick={() => handleToggleCompletion(params.row._id)}
           >
             {params.row.Iscollected ? "Completed" : "Mark as Completed"}
+          
           </button>
         </div>
       ),

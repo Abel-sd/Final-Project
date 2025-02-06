@@ -16,12 +16,12 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setUserProfile({
-        name: user?.data[0]?.name,
-        age: user?.data[0]?.age,
-        email: user?.data[0].Auth?.email,
-        contact: user?.data[0]?.phone,
-        gender: user?.data[0]?.gender,
-        bloodType: user?.data[0]?.bloodGroup,
+        name: user?.data?.name,
+        age: user?.data?.age,
+        email: user?.data.Auth?.email,
+        contact: user?.data?.phone,
+        gender: user?.data?.gender,
+        bloodType: user?.data?.bloodGroup,
         
       })
     }
