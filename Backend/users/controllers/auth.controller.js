@@ -117,7 +117,7 @@ module.exports.requestresetpassword = async (request, response, next) => {
 
 module.exports.restpasswordwithtoken = async (request, response, next) => {
     try {
-        console.log(request.body.token);
+        console.log(request.body);
         const user = await Auth.findOne({
             resetpasswordToken: request.body.token,
         });

@@ -51,6 +51,7 @@ module.exports.createDonor = async (req, res) => {
         session.endSession();
         res.status(201).send({ message: "Donor created. Please verify your email." });
     } catch (error) {
+        console.log(error);
         await session.abortTransaction();
         session.endSession();
         res.status(500).send({ message: "Error creating donor", error: error.message });

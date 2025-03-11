@@ -91,7 +91,7 @@ mutate()
           onClick={handleAlertClick}
           disabled={isPending}
         >
-          {isPending ? 'Sending...' : 'Alert Hospitals'}
+          {isPending ? 'Sending...' : 'Alert Donors'}
         </button>
       </div>
     )}

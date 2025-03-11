@@ -5,8 +5,7 @@ const { BloodInventory } = require("../models/Invetory");
 const { Auth } = require("../models/Auth");
 const config = require("../config/config"); // Adjust path as needed
 
-const dbUri = "mongodb+srv://andifab23:tNgwwixDs0Bo5aUj@cluster0.xka9c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-
+const dbUri = "mongodb+srv://abellinks22:yHAYV5GWvgZGvo1x@cluster0.5eykf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 // Create readline interface for user input
 const rl = readline.createInterface({
   input: process.stdin,
